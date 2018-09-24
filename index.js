@@ -3,61 +3,65 @@ const GIVING_DATA = 'Sending you the current list';
 const ADDING_ITEM = 'Adding an item to the list';
 
 const channel = new BroadcastChannel('List');
-let updateOwnList = () => {};
 
-(() => {
-  let list = [];
+// The list that holds the elements we render in HTML
+let list = [];
 
-  const updateList = list => {
-    const createListString = list => {
-      let result = '';
+// Takes a list, and updates the HTML
+const updateList = list => {
+  const createListString = list => {
+    let result = '';
 
-      list.forEach(entry => {
-        result += `<li>${entry}</li>`;
-      });
+    list.forEach(entry => {
+      result += `<li>${entry}</li>`;
+    });
 
-      return result;
-    };
-
-    const htmlList = document.getElementById('main');
-
-    htmlList.innerHTML = createListString(list);
+    return result;
   };
 
-  updateOwnList = value => {
-    list.push(value);
+  const htmlList = document.getElementById('main');
 
-    return updateList(list);
-  };
+  htmlList.innerHTML = createListString(list);
+};
 
-  channel.onmessage = event => {
-    console.log(event);
+// Updates the list with a value, and updates the HTML
+const updateOwnList = value => {
+  list.push(value);
 
-    switch (event.data.message) {
-      case GIVING_DATA: {
-        list = event.data.list;
+  return updateList(list);
+};
 
-        return updateList(list);
-      }
+channel.onmessage = event => {
+  console.log(event);
 
-      case GET_DATA: {
-        return channel.postMessage({
-          message: GIVING_DATA,
-          list
-        });
-      }
+  switch (event.data.message) {
+    case GIVING_DATA: {
+      // We assign the list to the incoming list
+      list = event.data.list;
 
-      case ADDING_ITEM: {
-        return updateOwnList(event.data.entry);
-      }
+      return updateList(list);
     }
-  };
 
-  channel.postMessage({
-    message: GET_DATA
-  });
-})();
+    case GET_DATA: {
+      // When we get a GET_DATA request we post our list
+      return channel.postMessage({
+        message: GIVING_DATA,
+        list
+      });
+    }
 
+    case ADDING_ITEM: {
+      return updateOwnList(event.data.entry);
+    }
+  }
+};
+
+// We request the existing data on load
+channel.postMessage({
+  message: GET_DATA
+});
+
+// Get the input data, update our lists, and reset input value
 listSubmit = () => {
   const input = document.getElementById('list-input');
 
