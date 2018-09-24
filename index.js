@@ -26,6 +26,8 @@ let updateOwnList = () => {};
 
   updateOwnList = value => {
     list.push(value);
+
+    return updateList(list);
   };
 
   channel.onmessage = event => {
